@@ -833,9 +833,9 @@ public class RedBlackBST<Key extends Comparable<Key>, Value> implements IOrdered
 		tem.left=tem;
 	}
 	
-	public Queue hojas()
+	public Iterable<Value> hojas()
 	{
-		Queue hojas= new Queue();
+		Queue<Value> hojas = new Queue<Value>();
 	
 		hojas(root, hojas);
 		
@@ -847,16 +847,24 @@ public class RedBlackBST<Key extends Comparable<Key>, Value> implements IOrdered
 	 * @param node The node whose height is checked.
 	 * @return The node's height. height >= 0.
 	 */
-	private void hojas(Node node, Queue lista)
+	private void hojas(Node node, Queue<Value> lista)
 	{ 
 		if(node.left==null && node.right==null)
 		{
-			lista.enqueue(node);
+			lista.enqueue(node.value);
 		}
 		else
 		{
-			hojas(node.left,lista);
-			hojas(node.right,lista);
+			if(node.left != null)
+			{
+				hojas(node.left,lista);
+			}
+			if(node.right != null)
+			{
+				hojas(node.right,lista);
+			}
+			
+			
 		}
 	}
 	

@@ -108,7 +108,7 @@ public class MVCModelo {
 		datos[0]=arbol.size();
 		datos[1]=arbol.height();
 		
-		Queue hojas= arbol.hojas();
+		Queue hojas= (Queue) arbol.hojas();
 		
 		Iterator iter= hojas.iterator();
 		int total=0;
@@ -117,7 +117,7 @@ public class MVCModelo {
 		while(iter.hasNext())
 		{
 			Feature actual= (Feature) iter.next();
-			int key= Integer.parseInt(actual.getPropiedades().getMOVEMENT_ID());
+			String key= (actual.getPropiedades().getMOVEMENT_ID());
 			int alturaActual= arbol.getHeight(key);
 			
 			total += alturaActual;
