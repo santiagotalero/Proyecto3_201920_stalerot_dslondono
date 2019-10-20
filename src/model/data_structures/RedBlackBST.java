@@ -4,8 +4,8 @@ import java.util.NoSuchElementException;
 
 
 /**
+ * Tomado de Algorithms: 4th Ed
  * Represents a red-black binary search tree.
- * @author Daniel del Castillo A (taken from the book Algorithms: 4th Ed.).
  * @param <Key> The key's type.
  * @param <Value> The value's type.
  */
