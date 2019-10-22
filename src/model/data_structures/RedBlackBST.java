@@ -873,7 +873,6 @@ public class RedBlackBST<Key extends Comparable<Key>, Value> implements IOrdered
 
 	/**
 	 * Represents the node of the tree.
-	 * @author Daniel del Castillo A.
 	 */
 	private class Node
 	{
