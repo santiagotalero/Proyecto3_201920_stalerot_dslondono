@@ -18,10 +18,10 @@ public class Graph<K extends Comparable<K>, V, A extends Comparable<A>>
 	/**
 	 * The table that stores the vertexes.
 	 */
-	private HashTableLinearProbing<K, Vertex<K, V, A>> vertexes;
+	public HashTableLinearProbing<K, Vertex<K, V, A>> vertexes;
 
 	
-	private HashTableLinearProbing<VertexPair<K>, Arc<K, V, A>> arcs;
+	public HashTableLinearProbing<VertexPair<K>, Arc<K, V, A>> arcs;
 
 	
 	// Constructor
@@ -106,7 +106,14 @@ public class Graph<K extends Comparable<K>, V, A extends Comparable<A>>
 	 * @return The value of the given vertex. 
 	 */
 	public V getInfoVertex(K idVertex)
-	{ return vertexes.get(idVertex).getValue(); }
+	{ 
+		if(vertexes.get(idVertex)!=null)
+		{
+			return vertexes.get(idVertex).getValue();
+		}
+		else
+			return null;
+		 }
 
 	/**
 	 * Changes the value of a given vertex.

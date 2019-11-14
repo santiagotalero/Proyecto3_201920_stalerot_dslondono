@@ -4,8 +4,14 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Iterator;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
+import com.google.gson.JsonObject;
 
 import model.data_structures.Arc;
 import model.data_structures.Graph;
@@ -167,4 +173,81 @@ public class MVCModelo {
 	
 	}
 	
+	
+	public void persistirJSon()
+	{
+		String path= "./data/grafo.json";
+		File archivoJSon= new File(path);
+		
+
+		JSONArray listaVertices = new JSONArray();
+
+		for (int i = 0; i < grafo.numberOfVertex(); i++)
+		{
+			Coordinate actual = (Coordinate) grafo.getInfoVertex(i);
+
+			if(actual != null)
+			{
+				
+				JSONObject datosVertice = new JSONObject();
+				datosVertice.put("id", i);
+				datosVertice.put("longitud", actual.getLongitude());
+				datosVertice.put("latitud", actual.getLatitude());
+				datosVertice.put("MOVEMENT_ID", actual.getMOVEMENT_ID());
+
+				JSONObject vertice = new JSONObject(); 
+				vertice.put("vertice", datosVertice);
+
+				listaVertices.add(vertice);
+			}
+		}
+
+		try (FileWriter file1 = new FileWriter(new File("data/vertices.json"))) {
+
+			file1.write(listaVertices.toJSONString());
+			file1.flush();
+
+		} catch (IOException e)
+		{e.printStackTrace();}
+
+		JSONArray listaArcos = new JSONArray();
+
+		int i=0;
+		while(i<grafo.numberOfArcs())
+		{
+			Arc actual = (Arc) grafo.arcs.get(i);
+
+			if(actual!=null)
+			{
+				JSONObject datosArco = new JSONObject();
+			datosArco.put("origen", actual.getStart());
+			datosArco.put("destino", actual.getFinish());
+			datosArco.put("Haversine", actual.getInfo());
+
+			JSONObject arco = new JSONObject(); 
+			arco.put("arco", datosArco);
+
+			listaArcos.add(arco);
+			i++;
+			}
+			
+		}
+
+		try (FileWriter file2 = new FileWriter(new File("data/arcos.json"))) {
+
+			file2.write(listaArcos.toJSONString());
+			file2.flush();
+
+		} catch (IOException e)
+		{e.printStackTrace();}	
+
+	}
+	
+	
+	
+	
+	
 }
+
+
+
