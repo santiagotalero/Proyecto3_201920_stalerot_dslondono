@@ -8,12 +8,15 @@ public class Coordinate
 	
 	double longitude;
 	
+	int MOVEMENT_ID;
+	
 	// Constructor
 	
-	public Coordinate(double pLatitude, double pLongitude)
+	public Coordinate(double pLatitude, double pLongitude, int MID)
 	{
 		latitude = pLatitude;
 		longitude = pLongitude;
+		MOVEMENT_ID=MID;
 	}
 	
 	// Methods
@@ -23,4 +26,9 @@ public class Coordinate
 	
 	public double getLongitude()
 	{ return longitude; }
+	
+	public int getMOVEMENT_ID()
+	{return MOVEMENT_ID;
+	
+	}
 }

@@ -1,17 +1,16 @@
 package model.logic;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Iterator;
 
-import com.google.gson.Gson;
-import com.google.gson.stream.JsonReader;
-import com.opencsv.CSVReader;
-
-
+import model.data_structures.Arc;
+import model.data_structures.Graph;
 import model.data_structures.Queue;
-import model.data_structures.RedBlackBST;
+import model.data_structures.Vertex;
 import model.logic.ClasesArchivoJSon.Feature;
 import model.logic.ClasesArchivoJSon.FeatureCollection;
 
@@ -25,7 +24,8 @@ public class MVCModelo {
 	 * Atributos del modelo del mundo
 	 */
 
-	private RedBlackBST arbol;
+	private Graph grafo;
+	private Queue<Vertex> verticesAuxiliar;
 	private int tamano;
 	
 	/**
@@ -33,8 +33,9 @@ public class MVCModelo {
 	 */
 	public MVCModelo()
 	{
-		arbol= new RedBlackBST();
-		 tamano=0;
+		grafo= new Graph();
+		verticesAuxiliar= new Queue	<Vertex>();
+		tamano=0;
 	}
 	
 	/**
@@ -49,92 +50,111 @@ public class MVCModelo {
 	
 	public void cargarArchivos() throws IOException
 	{
-		//ARCHIVO JSON
-				String path= "./data/bogota_cadastral.json";
-				
-				Gson gson = new Gson();
-				
-				JsonReader readerJSon;
-				
-				FeatureCollection a=null;
-				try{
-					readerJSon= new JsonReader(new FileReader(path));
-					a= gson.fromJson(readerJSon, FeatureCollection.class);
-					
-				}
-				catch(Exception e)
-				{
-					e.printStackTrace();
-				}
-
-				
-				int i=0;
-				
-				while(i<a.getFeatures().length)
-				{
-					Feature actual= a.getFeatures()[i];
-					
-					arbol.put(actual.getPropiedades().getMOVEMENT_ID(), actual);
-					i++;
-				}
-				System.out.println("Número de zonas cargadas: " + arbol.size());
-				
-				System.out.println("El valor minimo de MOVEMENT_ID: " + arbol.min());
-				
-				System.out.println("El valor maximo de MOVEMENT_ID: " + arbol.max());
-	}
+		
+		File archivo = new File ("./data/bogota_vertices.txt");
+		FileReader fr = new FileReader (archivo);
+		BufferedReader br = new BufferedReader(fr);
+		
 	
-	public Feature consultarPorID(int id)
-	{
-		String key= Integer.toString(id);
-		Feature aBuscar=(Feature) arbol.get(key);
-		
-		return aBuscar;
-	}
+		String linea = br.readLine();
 	
-	public Queue consultarPorIDRango(int idMenor, int idMayor)
-	{
-		String menor= Integer.toString(idMenor);
-		String mayor= Integer.toString(idMayor);
-		Queue lista= (Queue) arbol.valuesInRange(menor, mayor);
-		
-		return lista;
-	}
-	
-	public double[] datosAnalisis()
-	{
-		double[] datos= new double[3];
-		
-		datos[0]=arbol.size();
-		datos[1]=arbol.height();
-		
-		Queue hojas= (Queue) arbol.hojas();
-		
-		Iterator iter= hojas.iterator();
-		int total=0;
-		int cantidad=0;
-		
-		while(iter.hasNext())
+		while((linea=br.readLine())!=null)
 		{
-			Feature actual= (Feature) iter.next();
-			String key= (actual.getPropiedades().getMOVEMENT_ID());
-			int alturaActual= arbol.getHeight(key);
+			String[] l= linea.split(";");
 			
-			total += alturaActual;
-			cantidad ++;
+			Coordinate interseccion= new Coordinate(Double.parseDouble(l[1]),Double.parseDouble(l[2]),Integer.parseInt(l[3]));
+			Vertex<Integer,Coordinate,Double> vertice= new Vertex<Integer,Coordinate,Double>(Integer.parseInt(l[0]),interseccion);
+			grafo.addVertex(vertice.getId(), vertice.getValue());
+			verticesAuxiliar.enqueue(vertice);
+		
 		}
+		fr.close();
+		br.close();
 		
-		int promedio=0;
-		if(cantidad !=0)
+		File archivo2 = new File ("./data/bogota_arcos.txt");
+		FileReader fr2 = new FileReader (archivo);
+		BufferedReader br2 = new BufferedReader(fr);
+		
+	
+		String linea2 = null;
+	
+		while((linea2=br2.readLine())!=null)
+		{
+			String[] l= linea2.split(" ");
+			
+			int idOrigen= Integer.parseInt(l[0]);
+			
+			Vertex vertice1=null;
+			
+			Iterator<Vertex> iter= verticesAuxiliar.iterator();
+			
+			while(iter.hasNext()&&vertice1==null)
 			{
-				promedio= total/cantidad;
+				Vertex actual= iter.next();
+				
+				if((int)actual.getId()==idOrigen)
+				{
+					vertice1= actual;
+				}
 			}
+			
+			int i=1;
+			while(i<l.length)
+			{
+				int idVertice=Integer.parseInt(l[i]);
+				
+				Vertex vertice2= null;
+				
+				iter= verticesAuxiliar.iterator();
+				
+				while(iter.hasNext()&&vertice2==null)
+				{
+					Vertex actual= iter.next();
+					
+					if((int)actual.getId()==idVertice)
+					{
+						vertice2= actual;
+					}
+				}
+				
+				Coordinate c1=(Coordinate) vertice1.getValue();
+				Coordinate c2=(Coordinate) vertice2.getValue();
+				
+				Double lat1= c1.getLatitude();
+				Double lon1=c1.getLongitude();
+				Double lat2=c2.getLatitude();
+				Double lon2=c2.getLongitude();
+				
+				
+				double earthRadius = 6371;
+
+				lat1 = Math.toRadians(lat1);
+				lon1 = Math.toRadians(lon1);
+				lat2 = Math.toRadians(lat2);
+				lon2 = Math.toRadians(lon2);
+
+				double dlon = (lon2 - lon1);
+				double dlat = (lat2 - lat1);
+
+				double sinlat = Math.sin(dlat / 2);
+				double sinlon = Math.sin(dlon / 2);
+
+				double a = (sinlat * sinlat) + Math.cos(lat1)*Math.cos(lat2)*(sinlon*sinlon);
+				double c = 2 * Math.asin (Math.min(1.0, Math.sqrt(a)));
+
+				double Haversine = earthRadius * c * 1000;
+				
+				grafo.addEdge(idOrigen, idVertice, Haversine);
+				
+				
+				i++;
+			}
+	
 		
-		datos[2]=promedio;
-		return datos;
+		}
+	
+	
+	
 	}
-	
-	
-	
 	
 }
