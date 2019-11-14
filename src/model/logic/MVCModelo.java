@@ -68,17 +68,16 @@ public class MVCModelo {
 			verticesAuxiliar.enqueue(vertice);
 		
 		}
-		fr.close();
-		br.close();
+		
 		
 		File archivo2 = new File ("./data/bogota_arcos.txt");
-		FileReader fr2 = new FileReader (archivo);
-		BufferedReader br2 = new BufferedReader(fr);
+		FileReader fr2 = new FileReader (archivo2);
+		BufferedReader br2 = new BufferedReader(fr2);
 		
 	
 		String linea2 = null;
-	
-		while((linea2=br2.readLine())!=null)
+		int z=0;
+		while((linea2=br2.readLine())!=null&&z<10000)
 		{
 			String[] l= linea2.split(" ");
 			
@@ -117,10 +116,12 @@ public class MVCModelo {
 					}
 				}
 				
-				Coordinate c1=(Coordinate) vertice1.getValue();
-				Coordinate c2=(Coordinate) vertice2.getValue();
-				
-				Double lat1= c1.getLatitude();
+				if(vertice1!=null&& vertice2!=null)
+				{
+					Coordinate c1=(Coordinate) vertice1.getValue();
+					Coordinate c2=(Coordinate) vertice2.getValue();
+					
+					Double lat1= c1.getLatitude();
 				Double lon1=c1.getLongitude();
 				Double lat2=c2.getLatitude();
 				Double lon2=c2.getLongitude();
@@ -144,15 +145,24 @@ public class MVCModelo {
 
 				double Haversine = earthRadius * c * 1000;
 				
+				
 				grafo.addEdge(idOrigen, idVertice, Haversine);
+				}
+				
+				
+				
 				
 				
 				i++;
 			}
+	z++;
+			}
 	
-		
-		}
-	
+		fr.close();
+		br.close();
+		fr2.close();
+		br2.close();
+		System.out.println("El número de vertices cargado fue:"+ grafo.numberOfVertex()+" , y el número de arcos cargado fue:" + grafo.numberOfArcs());
 	
 	
 	}

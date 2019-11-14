@@ -19,10 +19,10 @@ public class Graph<K extends Comparable<K>, V, A extends Comparable<A>>
 	 * The table that stores the vertexes.
 	 */
 	private HashTableLinearProbing<K, Vertex<K, V, A>> vertexes;
-	private int V=vertexes.size();
+
 	
 	private HashTableLinearProbing<VertexPair<K>, Arc<K, V, A>> arcs;
-	private int E=arcs.size();
+
 	
 	// Constructor
 
@@ -79,7 +79,7 @@ public class Graph<K extends Comparable<K>, V, A extends Comparable<A>>
 	 * @param infoVertex The value of the vertex.
 	 */
 	public void addVertex(K idVertex, V infoVertex)
-	{ vertexes.put(idVertex, new Vertex<K, V, A>(idVertex, infoVertex)); }
+	{ vertexes.put(idVertex, new Vertex<K, V, A>(idVertex, infoVertex));  }
 
 	/**
 	 * Adds an edge to the graph between two given vertexes.
@@ -175,6 +175,15 @@ public class Graph<K extends Comparable<K>, V, A extends Comparable<A>>
 					vertexes.delete(keys[i]);
 			}
 		}
+	}
+	
+	public int numberOfVertex()
+	{
+		return vertexes.size();
+	}
+	public int numberOfArcs()
+	{
+		return arcs.size();
 	}
 	
 

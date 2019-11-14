@@ -50,50 +50,7 @@ public class Controller {
 					
 					break;
 
-				case 2:
-					
-					System.out.println("Ingrese un id de zona.");
-					int id=lector.nextInt();
-					
-					Feature a= modelo.consultarPorID(id);
-					
-					System.out.println("Nombre de zona: " + a.getPropiedades().getScanombre()+ " , perimetro: "+ a.getPropiedades().getShape_leng() + " , área: " + a.getPropiedades().getShape_area() + " , número de puntos que definen perimetro: "+ a.getGeometrias().getCoordinates().size());
-					
-					
-					break;
-				case 3:
-					System.out.println("Ingrese un id de zona menor.");
-					int idMenor=lector.nextInt();
-					
-					System.out.println("Ingrese un id de zona mayor.");
-					int idMayor=lector.nextInt();
-					
-					Queue l= modelo.consultarPorIDRango(idMenor, idMayor);
-					
-					Iterator iter= l.iterator();
-					
-					while(iter.hasNext())
-					{
-						a= (Feature) iter.next();
-						System.out.println("Nombre de zona: " + a.getPropiedades().getScanombre()+ " , perimetro: "+ a.getPropiedades().getShape_leng() + " , área: " + a.getPropiedades().getShape_area() + " , número de puntos que definen perimetro: "+ a.getGeometrias().getCoordinates().size());
-						
-					}
-					
-					break;
-				case 4:
-					double[] datos= modelo.datosAnalisis();
-					
-					int nodos= (int) datos[0];
-					int altura= (int) datos[1];
-					double promedio= datos[2];
-					
-					System.out.println("Datos para análisis: ");
-					System.out.println("Número de nodos: " + nodos);
-					System.out.println("Altura real arbol: " + altura);
-					System.out.println("Altura promedio de hojas: "+promedio);
-					
-					
-					break;
+				
 				case 5: 
 					System.out.println("--------- \n Hasta pronto !! \n---------"); 
 					lector.close();
