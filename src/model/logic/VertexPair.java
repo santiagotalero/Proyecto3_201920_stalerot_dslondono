@@ -2,7 +2,6 @@ package model.logic;
 
 /**
  * Class that represents a pair of vertexes.
- * @author Daniel del Castillo A.
  * @param <K> The key's class type.
  */
 public class VertexPair<K extends Comparable<K>> implements Comparable<VertexPair<K>>

@@ -2,7 +2,6 @@ package model.data_structures;
 
 /**
  * Interface that represents the SymbolTable's API.
- * @author Daniel del Castillo A.
  * @param <K> The key's class type.
  * @param <V> The value's class type.
  */

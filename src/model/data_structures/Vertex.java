@@ -2,7 +2,6 @@ package model.data_structures;
 
 /**
  * Class that represents a graph vertex.
- * @author Daniel del Castillo A.
  * @param <K> The vertex's key type. Must be comparable.
  * @param <V> The vertex's value type. 
  * @param <A> The arc's information type.

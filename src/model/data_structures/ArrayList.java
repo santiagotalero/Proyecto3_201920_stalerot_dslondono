@@ -4,7 +4,6 @@ import java.util.Iterator;
 
 /**
  * Class that represents a dinamic array of comparable elements.
- * @author Daniel del Castillo A. 
  * @param <T> The element's class type.
  */
 public class ArrayList<T extends Comparable<T>> implements IArrayList<T>

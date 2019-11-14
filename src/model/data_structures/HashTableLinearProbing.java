@@ -4,7 +4,6 @@ import java.math.BigInteger;
 
 /**
  * Class that represents a hash table with linear probing implementation.
- * @author Daniel del Castillo A.
  * @param <K> The key's class type.
  * @param <V> The value's class type.
  * <b>Invariant:<\b> M >= 2*N. Checks value-key relationship upon deleting a tuple.
