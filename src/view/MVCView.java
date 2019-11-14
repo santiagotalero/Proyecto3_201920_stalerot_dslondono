@@ -18,6 +18,7 @@ public class MVCView
 			System.out.println("Taller 7");
 			System.out.println("");
 			System.out.println("Pulse 1 para cargar archivos. (SOLO SE PUEDE HACER UNA VEZ)");
+			System.out.println("Pulse 2 para persistir el grafo en archivos json");
 
 			System.out.println("Pulsa 2 para salir");
 		}

@@ -49,6 +49,10 @@ public class Controller {
 					}
 					
 					break;
+				case 2:
+					modelo.persistirJSon();
+					
+					break;
 
 				
 				case 5: 
