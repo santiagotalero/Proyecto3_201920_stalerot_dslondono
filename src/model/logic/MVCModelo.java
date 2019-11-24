@@ -1,5 +1,6 @@
 package model.logic;
 
+import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -11,14 +12,20 @@ import java.util.Iterator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.stream.JsonReader;
+import com.opencsv.CSVReader;
 
 import model.data_structures.Arc;
+import model.data_structures.ArrayList;
 import model.data_structures.Graph;
 import model.data_structures.Queue;
 import model.data_structures.Vertex;
-import model.logic.ClasesArchivoJSon.Feature;
-import model.logic.ClasesArchivoJSon.FeatureCollection;
+import model.logic.JSon.ArcoJSon;
+import model.logic.JSon.VerticeJSon;
+
+
 
 
 /**
@@ -31,7 +38,8 @@ public class MVCModelo {
 	 */
 
 	private Graph grafo;
-	private Queue<Vertex> verticesAuxiliar;
+	private Queue<TravelTime> tiemposDeViaje;
+	private Queue<Interseccion> zonasUber;
 	private int tamano;
 	
 	/**
@@ -40,7 +48,8 @@ public class MVCModelo {
 	public MVCModelo()
 	{
 		grafo= new Graph();
-		verticesAuxiliar= new Queue	<Vertex>();
+		tiemposDeViaje= new Queue<TravelTime>();
+		zonasUber= new Queue<Interseccion>();
 		tamano=0;
 	}
 	
@@ -54,9 +63,179 @@ public class MVCModelo {
 	}
 
 	
-	public void cargarArchivos() throws IOException
+	public void cargarGrafoInicial()
 	{
+		//ARCHIVOS JSON
+		String path1= "./data/Archivos Json Grafo/vertices.json";
+
+
+		Gson gson = new Gson();
+
+		JsonReader readerJSon;
+
+		 VerticeJSon[] v= null;
 		
+		try{
+			readerJSon= new JsonReader(new FileReader(path1));
+			v= gson.fromJson(readerJSon, VerticeJSon[].class);
+
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+
+		int i=0;
+
+		while(i<v.length)
+		{
+			VerticeJSon actual= v[i];
+			
+			Coordinate interseccion= new Coordinate(actual.getLongitud(),actual.getLatitud(),actual.getMOVEMENT_ID());
+			Vertex<Integer,Coordinate,Double> vertice= new Vertex<Integer,Coordinate,Double>(actual.getId(),interseccion);
+
+
+			grafo.addVertex(vertice.getId(), vertice.getValue());
+			
+			i++;
+		}
+		
+		String path2= "./data/Archivos Json Grafo/arcos.json"; 
+		
+		Gson gson2 = new Gson();
+
+		JsonReader readerJSon2;
+
+		 ArcoJSon[] a= null;
+		
+		try{
+			readerJSon= new JsonReader(new FileReader(path2));
+			a= gson.fromJson(readerJSon, ArcoJSon[].class);
+
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+
+
+		int j=0;
+
+		while(j<a.length)
+		{
+			ArcoJSon actual= a[j];
+
+			grafo.addEdge(actual.getOrigen(), actual.getDestino(), actual.getHaversine());
+			
+			j++;
+		}
+		
+		System.out.println("El número de vertices cargado fue:"+ grafo.numberOfVertex()+" , y el número de arcos cargado fue:" + grafo.numberOfArcs());
+		
+		File htmlFile = new File("marca.com");
+		try {
+			Desktop.getDesktop().browse(htmlFile.toURI());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+
+	public void cambiarCostos() throws Exception
+	{	
+		cargarArchivosViajesZonas();
+		
+		int i=0;
+		
+		while(i<grafo.numberOfArcs())
+		{
+			int j=0;
+			
+			while(j<grafo.numberOfArcs())
+			{
+				
+				//Costo 1
+				Double haversine=0.0;
+				
+				if(grafo.getInfoArc(i, j)!=null)
+				{
+					haversine=(Double) grafo.getInfoArc(i, j);
+				}
+				
+				
+				//Costo 2
+				double totalTiempos=0;
+				int numeroTiempos=0;
+				
+				Iterator<TravelTime> iter= tiemposDeViaje.iterator();
+				
+				while(iter.hasNext())
+				{
+					TravelTime actual= iter.next();
+					
+					int origen=actual.getSourceID();
+					int destino= actual.getDstID();
+					
+					if((origen==i && destino==j)||(origen==j&&destino==i))
+					{
+						totalTiempos += actual.getMeanTravelTime();
+						numeroTiempos++;
+					}
+					
+				}
+				
+				double promedio=0;
+				
+				if(numeroTiempos !=0)
+				{
+					promedio=(totalTiempos/numeroTiempos);
+				}
+				else
+				{
+					Coordinate v1=(Coordinate) grafo.getInfoVertex(i);
+					Coordinate v2=(Coordinate) grafo.getInfoVertex(j);
+					
+					if(v1!=null&&v2!=null&&v1.getMOVEMENT_ID()==v2.getMOVEMENT_ID())
+					{
+						promedio=10;
+					}
+					else
+					{
+						promedio=100;
+					}
+				}
+				
+				//Costo 3
+				
+				double velocidad=haversine/promedio;
+				
+				//Cambiar costos
+				
+//				double[] costos= new double[3];
+//				
+//				costos[0]= haversine;
+//				costos[1]= promedio;
+//				costos[2]= velocidad;
+				
+				
+				
+				EstructuraCostos costos= new EstructuraCostos(haversine,promedio,velocidad);
+				System.out.println("h:"+haversine+ " t:"+ promedio+ " v:"+ velocidad);
+				
+				grafo.setInfoArc(i, j, (Comparable) costos);
+				
+				
+				j++;
+			}
+			i++;
+		}
+		
+		
+	}
+	
+	private void cargarArchivosViajesZonas() throws Exception
+	{
 		File archivo = new File ("./data/bogota_vertices.txt");
 		FileReader fr = new FileReader (archivo);
 		BufferedReader br = new BufferedReader(fr);
@@ -68,69 +247,59 @@ public class MVCModelo {
 		{
 			String[] l= linea.split(";");
 			
-			Coordinate interseccion= new Coordinate(Double.parseDouble(l[1]),Double.parseDouble(l[2]),Integer.parseInt(l[3]));
-			Vertex<Integer,Coordinate,Double> vertice= new Vertex<Integer,Coordinate,Double>(Integer.parseInt(l[0]),interseccion);
-			grafo.addVertex(vertice.getId(), vertice.getValue());
-			verticesAuxiliar.enqueue(vertice);
+			Interseccion interseccion= new Interseccion(Double.parseDouble(l[1]),Double.parseDouble(l[2]),Integer.parseInt(l[3]), Integer.parseInt(l[0]));
 		
+			zonasUber.enqueue(interseccion);
 		}
 		
 		
-		File archivo2 = new File ("./data/bogota_arcos.txt");
-		FileReader fr2 = new FileReader (archivo2);
-		BufferedReader br2 = new BufferedReader(fr2);
-		
-	
-		String linea2 = null;
-		int z=0;
-		while((linea2=br2.readLine())!=null&&z<10000)
+		CSVReader readerCSV = null;
+		try 
 		{
-			String[] l= linea2.split(" ");
+			readerCSV = new CSVReader(new FileReader("./data/bogota-cadastral-2018-1-WeeklyAggregate.csv"));
+
 			
-			int idOrigen= Integer.parseInt(l[0]);
-			
-			Vertex vertice1=null;
-			
-			Iterator<Vertex> iter= verticesAuxiliar.iterator();
-			
-			while(iter.hasNext()&&vertice1==null)
+			readerCSV.readNext();
+
+			for(String[] nextLine : readerCSV)
 			{
-				Vertex actual= iter.next();
-				
-				if((int)actual.getId()==idOrigen)
-				{
-					vertice1= actual;
+				TravelTime actual= new TravelTime(1,Integer.parseInt(nextLine[0]),Integer.parseInt(nextLine[1]),Integer.parseInt(nextLine[2]),Double.parseDouble(nextLine[3]),Double.parseDouble(nextLine[4]));
+				tiemposDeViaje.enqueue(actual);
+			}
+
+		} 
+		catch (FileNotFoundException e) 
+		{
+			e.printStackTrace();
+		} 
+		finally{
+			if (readerCSV != null) {
+				try {
+					readerCSV.close();
+				} catch (IOException e) {
+					e.printStackTrace();
 				}
 			}
+
+		}
+	}
+	
+	public Vertex encontrarVerticeMasCercano(double lat2, double lon2)
+	{
+		int i=0;
+		
+		Vertex v=null;
+		
+		double distancia= Double.POSITIVE_INFINITY;
+		
+		while(i<grafo.numberOfVertex())
+		{
+			Coordinate actual=(Coordinate) grafo.getInfoVertex(i);
 			
-			int i=1;
-			while(i<l.length)
+			if(actual!=null)
 			{
-				int idVertice=Integer.parseInt(l[i]);
-				
-				Vertex vertice2= null;
-				
-				iter= verticesAuxiliar.iterator();
-				
-				while(iter.hasNext()&&vertice2==null)
-				{
-					Vertex actual= iter.next();
-					
-					if((int)actual.getId()==idVertice)
-					{
-						vertice2= actual;
-					}
-				}
-				
-				if(vertice1!=null&& vertice2!=null)
-				{
-					Coordinate c1=(Coordinate) vertice1.getValue();
-					Coordinate c2=(Coordinate) vertice2.getValue();
-					
-					Double lat1= c1.getLatitude();
-				Double lon1=c1.getLongitude();
-				Double lat2=c2.getLatitude();
-				Double lon2=c2.getLongitude();
+				Double lat1= actual.getLatitude();
+				Double lon1= actual.getLongitude();
 				
 				
 				double earthRadius = 6371;
@@ -151,102 +320,24 @@ public class MVCModelo {
 
 				double Haversine = earthRadius * c * 1000;
 				
-				
-				grafo.addEdge(idOrigen, idVertice, Haversine);
+				if(Haversine<distancia)
+				{
+					distancia=Haversine;
+					v= new Vertex(i, actual);
 				}
-				
-				
-				
-				
-				
-				i++;
-			}
-	z++;
-			}
-	
-		fr.close();
-		br.close();
-		fr2.close();
-		br2.close();
-		System.out.println("El número de vertices cargado fue:"+ grafo.numberOfVertex()+" , y el número de arcos cargado fue:" + grafo.numberOfArcs());
-	
-	
-	}
-	
-	
-	public void persistirJSon()
-	{
-		String path= "./data/grafo.json";
-		File archivoJSon= new File(path);
-		
-
-		JSONArray listaVertices = new JSONArray();
-
-		for (int i = 0; i < grafo.numberOfVertex(); i++)
-		{
-			Coordinate actual = (Coordinate) grafo.getInfoVertex(i);
-
-			if(actual != null)
-			{
-				
-				JSONObject datosVertice = new JSONObject();
-				datosVertice.put("id", i);
-				datosVertice.put("longitud", actual.getLongitude());
-				datosVertice.put("latitud", actual.getLatitude());
-				datosVertice.put("MOVEMENT_ID", actual.getMOVEMENT_ID());
-
-				JSONObject vertice = new JSONObject(); 
-				vertice.put("vertice", datosVertice);
-
-				listaVertices.add(vertice);
-			}
-		}
-
-		try (FileWriter file1 = new FileWriter(new File("data/vertices.json"))) {
-
-			file1.write(listaVertices.toJSONString());
-			file1.flush();
-
-		} catch (IOException e)
-		{e.printStackTrace();}
-
-		JSONArray listaArcos = new JSONArray();
-
-		int i=0;
-		while(i<grafo.numberOfArcs())
-		{
-			Arc actual = (Arc) grafo.arcs.get(i);
-
-			if(actual!=null)
-			{
-				JSONObject datosArco = new JSONObject();
-			datosArco.put("origen", actual.getStart());
-			datosArco.put("destino", actual.getFinish());
-			datosArco.put("Haversine", actual.getInfo());
-
-			JSONObject arco = new JSONObject(); 
-			arco.put("arco", datosArco);
-
-			listaArcos.add(arco);
-			i++;
 			}
 			
+			i++;
 		}
-
-		try (FileWriter file2 = new FileWriter(new File("data/arcos.json"))) {
-
-			file2.write(listaArcos.toJSONString());
-			file2.flush();
-
-		} catch (IOException e)
-		{e.printStackTrace();}	
-
+		
+		
+		
+		return v;
 	}
 	
-	
-	
-	
-	
+
+
+
 }
 
 

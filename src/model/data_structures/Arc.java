@@ -103,6 +103,8 @@ public class Arc<K extends Comparable<K>, V, A extends Comparable<A>> implements
 	public String toString()
 	{ return "Start: " + start.toString() + "; Finish: " + finish.toString() + "; Info: " + info; }
 
+
+
 	// Invariant
 
 	/**
