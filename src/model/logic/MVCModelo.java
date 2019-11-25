@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Iterator;
 
 import org.json.simple.JSONArray;
@@ -132,13 +133,7 @@ public class MVCModelo {
 		
 		System.out.println("El número de vertices cargado fue:"+ grafo.numberOfVertex()+" , y el número de arcos cargado fue:" + grafo.numberOfArcs());
 		
-		File htmlFile = new File("marca.com");
-		try {
-			Desktop.getDesktop().browse(htmlFile.toURI());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
 		
 	}
 
@@ -335,8 +330,31 @@ public class MVCModelo {
 		return v;
 	}
 	
+	public void generarMapa() throws Exception
+	{
+		File archivo = new File ("./data/mapa.html");
+		PrintWriter pr = new PrintWriter(archivo);
+		
+		pr.print("<!DOCTYPE html>\n<html>\n<head>\n<meta name="viewport" content="initial-scale=1.0, user-scalable=no">\n<meta charset="utf-8">\n<title>Simple Polylines</title>\n<style>\n#map {\nheight: 100%;\n}\nhtml,\nbody {\nheight: 100%;\nmargin: 0;\npadding: 0;\n}\n</style>\n</head>\n<body>\n<div id="map"></div>
+  <script>
+   
+    function initMap() {
 
+      var map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 5,
+        center: {
+          lat: 40.162838,
+          lng: -3.494526
+        },
+        mapTypeId: 'roadmap'
+      });
 
+      var line;
+      var path;
+ ");
+   
+	}
+	
 
 }
 
