@@ -215,6 +215,8 @@ public class MVCModelo {
 				
 				
 				
+				
+				
 				EstructuraCostos costos= new EstructuraCostos(haversine,promedio,velocidad);
 				System.out.println("h:"+haversine+ " t:"+ promedio+ " v:"+ velocidad);
 				
@@ -332,29 +334,52 @@ public class MVCModelo {
 	
 	public void generarMapa() throws Exception
 	{
-		File archivo = new File ("./data/mapa.html");
-		PrintWriter pr = new PrintWriter(archivo);
+		File pre= new File("./data/HTML/pre.html");
+		FileReader frPre= new FileReader(pre);
+		BufferedReader brPre= new BufferedReader(frPre);
 		
-		pr.print("<!DOCTYPE html>\n<html>\n<head>\n<meta name="viewport" content="initial-scale=1.0, user-scalable=no">\n<meta charset="utf-8">\n<title>Simple Polylines</title>\n<style>\n#map {\nheight: 100%;\n}\nhtml,\nbody {\nheight: 100%;\nmargin: 0;\npadding: 0;\n}\n</style>\n</head>\n<body>\n<div id="map"></div>
-  <script>
-   
-    function initMap() {
-
-      var map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 5,
-        center: {
-          lat: 40.162838,
-          lng: -3.494526
-        },
-        mapTypeId: 'roadmap'
-      });
-
-      var line;
-      var path;
- ");
-   
-	}
+		File post= new File("./data/HTML/post.html");
+		FileReader frPost= new FileReader(post);
+		BufferedReader brPost= new BufferedReader(frPost);
+		
 	
+		File escritura = new File ("./data/HTML/mapa.html");
+		PrintWriter pr = new PrintWriter(escritura);
+		
+		String lineaPre= brPre.readLine();
+		
+		while(lineaPre!=null)
+		{
+			pr.println(lineaPre);
+			
+			lineaPre=brPre.readLine();
+		}
+		
+		int i=0;
+		
+		while(i<grafo.numberOfArcs())
+		{
+			Coordinate c= (Coordinate) grafo.getInfoVertex(i);
+			
+			if(c!=null)
+			{
+				Iterable adyacentes=grafo.adj(i);
+				Iterator iter= adyacentes.iterator();
+				
+//				while(iter.hasNext())
+				{
+//					pr.println("line = [ {");
+//					pr.println("   lat:"+);
+//					pr.println(" lng:"+);
+//					pr.println("line = [ {");
+				}
+			}
+		}
+		
+		
+		
+			
+	}
 
 }
 
