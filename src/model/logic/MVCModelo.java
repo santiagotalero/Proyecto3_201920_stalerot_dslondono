@@ -9,6 +9,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Iterator;
+import java.util.StringJoiner;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -20,6 +21,7 @@ import com.opencsv.CSVReader;
 
 import model.data_structures.Arc;
 import model.data_structures.ArrayList;
+import model.data_structures.ArrayList.IteratorArrayList;
 import model.data_structures.Dijkstra;
 import model.data_structures.DirectedEdge;
 import model.data_structures.Edge;
@@ -44,7 +46,10 @@ public class MVCModelo {
 	 */
 
 	private EdgeWeightedDigraph grafo0;
-	private Graph grafo; 
+	private Graph grafoDistancia;
+	private Graph grafoTiempo; 
+	private Graph grafoVelocidad; 
+	
 	private Queue<TravelTime> tiemposDeViaje;
 	private Queue<Interseccion> zonasUber;
 	private int tamano;
@@ -55,12 +60,14 @@ public class MVCModelo {
 	 */
 	public MVCModelo()
 	{
-		grafo= new Graph();
+		grafoDistancia= new Graph();
+		grafoTiempo= new Graph();
+		grafoVelocidad= new Graph();
 		tiemposDeViaje= new Queue<TravelTime>();
 		zonasUber= new Queue<Interseccion>();
 		tamano=0;
 
-		dijkstra = new Dijkstra(grafo0, 0);
+		//dijkstra = new Dijkstra(grafo0, 0);
 	}
 
 	/**
@@ -105,7 +112,7 @@ public class MVCModelo {
 			Vertex<Integer,Coordinate,Double> vertice= new Vertex<Integer,Coordinate,Double>(actual.getId(),interseccion);
 
 
-			grafo.addVertex(vertice.getId(), vertice.getValue());
+			grafoDistancia.addVertex(vertice.getId(), vertice.getValue());
 
 			i++;
 		}
@@ -135,54 +142,44 @@ public class MVCModelo {
 		{
 			ArcoJSon actual= a[j];
 
-			grafo.addEdge(actual.getOrigen(), actual.getDestino(), actual.getHaversine());
+			grafoDistancia.addEdge(actual.getOrigen(), actual.getDestino(), actual.getHaversine());
 
 			j++;
 		}
 
-		System.out.println("El número de vertices cargado fue:"+ grafo.numberOfVertex()+" , y el número de arcos cargado fue:" + grafo.numberOfArcs());
-<<<<<<< HEAD
-		
-		
-		
-=======
+		System.out.println("El número de vertices cargado fue:"+ grafoDistancia.V()+" , y el número de arcos cargado fue:" + grafoDistancia.E());
 
-		File htmlFile = new File("marca.com");
-		try {
-			Desktop.getDesktop().browse(htmlFile.toURI());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 
->>>>>>> 6a1b7f14ee51beb46f50c15574bbccbbc648d11d
 	}
 
 	public void cambiarCostos() throws Exception
 	{	
 		cargarArchivosViajesZonas();
+		grafoTiempo=grafoDistancia;
+		grafoVelocidad=grafoDistancia;
 
 		int i=0;
 
-		while(i<grafo.numberOfArcs())
+		while(i<grafoDistancia.E())
 		{
 			int j=0;
 
-			while(j<grafo.numberOfArcs())
+			while(j<grafoDistancia.E())
 			{
 
 				//Costo 1
 				Double haversine=0.0;
 
-				if(grafo.getInfoArc(i, j)!=null)
+				if(grafoDistancia.getInfoArc(i, j)!=null)
 				{
-					haversine=(Double) grafo.getInfoArc(i, j);
+					haversine=(Double) grafoDistancia.getInfoArc(i, j);
 				}
 
 
 				//Costo 2
 				double totalTiempos=0;
 				int numeroTiempos=0;
+				System.out.println(tiemposDeViaje.size());
 
 				Iterator<TravelTime> iter= tiemposDeViaje.iterator();
 
@@ -209,8 +206,8 @@ public class MVCModelo {
 				}
 				else
 				{
-					Coordinate v1=(Coordinate) grafo.getInfoVertex(i);
-					Coordinate v2=(Coordinate) grafo.getInfoVertex(j);
+					Coordinate v1=(Coordinate) grafoDistancia.getInfoVertex(i);
+					Coordinate v2=(Coordinate) grafoDistancia.getInfoVertex(j);
 
 					if(v1!=null&&v2!=null&&v1.getMOVEMENT_ID()==v2.getMOVEMENT_ID())
 					{
@@ -221,40 +218,16 @@ public class MVCModelo {
 						promedio=100;
 					}
 				}
+				System.out.println(promedio);
 
 				//Costo 3
 
 				double velocidad=haversine/promedio;
 
 				//Cambiar costos
-<<<<<<< HEAD
 				
-//				double[] costos= new double[3];
-//				
-//				costos[0]= haversine;
-//				costos[1]= promedio;
-//				costos[2]= velocidad;
-				
-				
-				
-				
-				
-=======
-
-				//				double[] costos= new double[3];
-				//				
-				//				costos[0]= haversine;
-				//				costos[1]= promedio;
-				//				costos[2]= velocidad;
-
-
-
->>>>>>> 6a1b7f14ee51beb46f50c15574bbccbbc648d11d
-				EstructuraCostos costos= new EstructuraCostos(haversine,promedio,velocidad);
-				System.out.println("h:"+haversine+ " t:"+ promedio+ " v:"+ velocidad);
-
-				grafo.setInfoArc(i, j, (Comparable) costos);
-
+				grafoTiempo.setInfoArc(i, j, promedio);
+				grafoVelocidad.setInfoArc(i, j, velocidad);
 
 				j++;
 			}
@@ -321,35 +294,34 @@ public class MVCModelo {
 		Vertex v=null;
 
 		double distancia= Double.POSITIVE_INFINITY;
+		
 
-		while(i<grafo.numberOfVertex())
+		while(i<grafoDistancia.V())
 		{
-			Coordinate actual=(Coordinate) grafo.getInfoVertex(i);
+			Coordinate actual=(Coordinate) grafoDistancia.getInfoVertex(i);
 
 			if(actual!=null)
 			{
 				Double lat1= actual.getLatitude();
 				Double lon1= actual.getLongitude();
+				
+
+			    final int R = 6371; // Radius of the earth
+
+			    double latDistance = Math.toRadians(lat2 - lat1);
+			    double lonDistance = Math.toRadians(lon2 - lon1);
+			    double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+			            + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+			            * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+			    double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+			    double distance = R * c * 1000; // convert to meters
 
 
-				double earthRadius = 6371;
+			    distance = Math.pow(distance, 2);
 
-				lat1 = Math.toRadians(lat1);
-				lon1 = Math.toRadians(lon1);
-				lat2 = Math.toRadians(lat2);
-				lon2 = Math.toRadians(lon2);
-
-				double dlon = (lon2 - lon1);
-				double dlat = (lat2 - lat1);
-
-				double sinlat = Math.sin(dlat / 2);
-				double sinlon = Math.sin(dlon / 2);
-
-				double a = (sinlat * sinlat) + Math.cos(lat1)*Math.cos(lat2)*(sinlon*sinlon);
-				double c = 2 * Math.asin (Math.min(1.0, Math.sqrt(a)));
-
-				double Haversine = earthRadius * c * 1000;
-
+			    Double Haversine=Math.sqrt(distance);
+			    
+				
 				if(Haversine<distancia)
 				{
 					distancia=Haversine;
@@ -363,6 +335,94 @@ public class MVCModelo {
 
 
 		return v;
+	}
+	
+	public void generarMapa() throws Exception
+	{
+		File pre= new File("./data/HTML/pre.html");
+		FileReader frPre= new FileReader(pre);
+		BufferedReader brPre= new BufferedReader(frPre);
+
+		File post= new File("./data/HTML/post.html");
+		FileReader frPost= new FileReader(post);
+		BufferedReader brPost= new BufferedReader(frPost);
+
+
+		File escritura = new File ("./data/HTML/mapa.html");
+		PrintWriter pr = new PrintWriter(escritura);
+
+		String lineaPre= brPre.readLine();
+
+		while(lineaPre!=null)
+		{
+			pr.println(lineaPre);
+
+			lineaPre=brPre.readLine();
+		}
+		
+		brPre.close();
+
+		int i=0;
+		
+		while(i<grafoDistancia.E())
+		{
+			Coordinate c= (Coordinate) grafoDistancia.getInfoVertex(i);
+
+			if(c!=null)
+			{
+				IteratorArrayList adyacentes=grafoDistancia.adj(i);
+
+
+				while(adyacentes.hasNext())
+				{
+					
+					int id= (int) adyacentes.next();
+					
+					pr.println("line = [");
+					
+					StringJoiner joiner= new StringJoiner(",");
+					
+					Coordinate c2= (Coordinate) grafoDistancia.getInfoVertex(id);
+					
+					double lat1= c.latitude;
+					double lon1=c.longitude;
+					double lat2=c2.latitude;
+					double lon2=c2.longitude;
+					
+					String s1= "{ lat: "+lat1+" , lng: "+lon1+"}";
+					String s2= "{ lat: "+lat2+" , lng: "+lon2+"}";
+					
+					joiner.add(s1).add(s2);
+					
+					pr.println(joiner.toString());
+					
+					pr.println("]; path = new google.maps.Polyline({path: line, strokeColor: '#FF0000', strokeWeight: 2 }); path.setMap(map);");
+				}
+			}
+			i++;
+		}
+		
+		String lineaPost= brPost.readLine();
+
+		while(lineaPost!=null)
+		{
+			pr.println(lineaPost);
+
+			lineaPost=brPost.readLine();
+		}
+		
+		brPost.close();
+		pr.close();
+
+		File htmlFile = escritura;
+		try {
+			Desktop.getDesktop().browse(htmlFile.toURI());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+
 	}
 
 	////////////////////////////////////////////////////////////////////////////
@@ -436,61 +496,96 @@ public class MVCModelo {
 	///// PARTE B  /////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////
 
-	public Queue<Vertex> reqB1( long lat1, long lon1, long lat2, long lon2 )
+	public void reqB1( double lat1, double lon1, double lat2, double lon2 )
 	{
-		return null; 
-	}
-<<<<<<< HEAD
-	
-	public void generarMapa() throws Exception
-	{
-		File pre= new File("./data/HTML/pre.html");
-		FileReader frPre= new FileReader(pre);
-		BufferedReader brPre= new BufferedReader(frPre);
+		Vertex v1= encontrarVerticeMasCercano(lat1, lon1);
+		Vertex v2= encontrarVerticeMasCercano(lat2, lon2);
 		
-		File post= new File("./data/HTML/post.html");
-		FileReader frPost= new FileReader(post);
-		BufferedReader brPost= new BufferedReader(frPost);
+		int id1= (int) v1.getId();
+		int id2=(int) v2.getId();
+
 		
-	
-		File escritura = new File ("./data/HTML/mapa.html");
-		PrintWriter pr = new PrintWriter(escritura);
+		Queue<Vertex> q= new Queue<Vertex>();
 		
-		String lineaPre= brPre.readLine();
+		boolean[] marked = new boolean[grafoDistancia.V()];
 		
-		while(lineaPre!=null)
+		DFS(id1,id2, marked, q );
+		
+		System.out.println("Camino a seguir:");
+		System.out.println("");
+		System.out.println("Total vertices:"+ q.size());
+		
+		Iterator iter= q.iterator();
+		
+		
+		while(iter.hasNext())
 		{
-			pr.println(lineaPre);
+			Vertex actual= (Vertex) iter.next();
+			Coordinate c= (Coordinate) actual.getValue();
 			
-			lineaPre=brPre.readLine();
-		}
+			System.out.println("Id: "+ actual.getId()+ " latitud: " + c.latitude + " longitud: " + c.longitude);
+		} 
 		
-		int i=0;
+		double distanciaTotal=0;
+		double tiempoTotal=0;
 		
-		while(i<grafo.numberOfArcs())
+		iter=q.iterator();
+		while(iter.hasNext())
 		{
-			Coordinate c= (Coordinate) grafo.getInfoVertex(i);
+			Vertex actual= (Vertex) iter.next();
+			int i1= (int) actual.getId();
 			
-			if(c!=null)
+			if(iter.hasNext())
 			{
-				Iterable adyacentes=grafo.adj(i);
-				Iterator iter= adyacentes.iterator();
+				Vertex siguiente= (Vertex) iter.next();
+				int i2=(int) siguiente.getId();
 				
-//				while(iter.hasNext())
+				if(grafoDistancia.getInfoArc(i1, i2)!=null)
 				{
-//					pr.println("line = [ {");
-//					pr.println("   lat:"+);
-//					pr.println(" lng:"+);
-//					pr.println("line = [ {");
+					double d=(double) grafoDistancia.getInfoArc(i1, i2);
+					distanciaTotal += d;
 				}
+				
+//				double t= (double) grafoTiempo.getInfoArc(i1, i2);
+				
+				
+//				tiempoTotal += t;
 			}
+			
+			
+		} 
+		
+		System.out.println("Distancia total: " + distanciaTotal);
+		System.out.println("Tiempo total: "+ tiempoTotal);
+
+	}
+
+	private void DFS(int v, int f, boolean[] marked, Queue<Vertex> q)
+	{
+		Coordinate actual=(Coordinate) grafoDistancia.getInfoVertex(v);
+		Vertex ver= new Vertex(v, actual);
+		q.enqueue(ver);
+		
+		if(v==f)
+		{
+			return;
 		}
 		
-		
-		
-			
+		marked[v] = true;
+		int actKey =(int) grafoDistancia.indexToKey(v);
+
+		Iterable<Integer> adjs = grafoDistancia.adjacents(actKey);
+		for(Integer id : adjs)
+		{
+			int adjId = grafoDistancia.keyToIndex(id);
+			if(!marked[adjId])
+			{
+				DFS(adjId, f, marked, q);
+			}
+				
+		}
 	}
-=======
+
 
 	public Queue<Vertex> reqB2(long lat1, long lon2, int T )
 	{
@@ -522,8 +617,6 @@ public class MVCModelo {
 	}
 
 
-
->>>>>>> 6a1b7f14ee51beb46f50c15574bbccbbc648d11d
 
 }
 

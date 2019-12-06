@@ -62,6 +62,13 @@ public class Vertex<K extends Comparable<K>, V, A extends Comparable<A>> impleme
 	 */
 	public ArrayList<K> getAdjacentsId()
 	{ return adjacentsId; } 
+	
+	/**
+	 * Changes the vertex's adjacents by the ones given.
+	 * @param pAdjacentsId The vertex's new adjacents.
+	 */
+	public void setAdjacents(ArrayList<K> pAdjacentsId)
+	{ adjacentsId = pAdjacentsId; }
 
 	/**
 	 * @return The vertex's value. value != null.

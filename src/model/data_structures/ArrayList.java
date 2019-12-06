@@ -186,7 +186,7 @@ public class ArrayList<T extends Comparable<T>> implements IArrayList<T>
 	 * @author Daniel del Castillo A.
 	 * @param <T> The element's class type.
 	 */
-	private class IteratorArrayList<T> implements Iterator<T>
+	public class IteratorArrayList<T> implements Iterator<T>
 	{
 		// Attributes
 

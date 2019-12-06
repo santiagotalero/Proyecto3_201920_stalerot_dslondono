@@ -40,6 +40,12 @@ public class Controller {
 			switch(option){
 			case 1:
 				modelo.cargarGrafoInicial();
+				try {
+					modelo.generarMapa();
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 
 				break;
 			case 2:
@@ -78,7 +84,20 @@ public class Controller {
 
 				break;
 			case 7:
-
+				System.out.println("Ingrese una latitud.");
+				double lat7a= lector.nextDouble();
+				
+				System.out.println("Ingrese una longitud.");
+				double lon7a= lector.nextDouble();
+				
+				System.out.println("Ingrese una latitud.");
+				double lat7b= lector.nextDouble();
+				
+				System.out.println("Ingrese una longitud.");
+				double lon7b= lector.nextDouble();
+				
+				
+				modelo.reqB1(lat7a, lon7a, lat7b, lon7b);
 
 				break;
 			case 8:
