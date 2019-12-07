@@ -101,8 +101,16 @@ public class Controller {
 
 				break;
 			case 8:
-
-
+				System.out.println("Ingrese una latitud.");
+				double lat8= lector.nextDouble();
+				
+				System.out.println("Ingrese una longitud.");
+				double lon8= lector.nextDouble();
+				
+				System.out.println("Ingrese un tiempo.");
+				int T8= lector.nextInt();
+				
+				modelo.reqB2(lat8, lon8, T8);
 				break;
 			case 9:
 

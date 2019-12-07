@@ -264,6 +264,10 @@ public class Graph<K extends Comparable<K>, V, A extends Comparable<A>>
 	{
 		return vertexes;
 	}
+	public HashTableLinearProbing<VertexPair<K>, Arc<K, V, A>> getArcs()
+	{
+		return arcs;
+	}
 	
 	// Invariant
 

@@ -155,88 +155,59 @@ public class MVCModelo {
 	public void cambiarCostos() throws Exception
 	{	
 		cargarArchivosViajesZonas();
+		generarGrafoTiempo();
+
+		
+
+	}
+
+	private void generarGrafoTiempo()
+	{
 		grafoTiempo=grafoDistancia;
-		grafoVelocidad=grafoDistancia;
-
+		int z=0;
+		
 		int i=0;
-
-		while(i<grafoDistancia.E())
+		
+		double[] tiempos= new double[grafoTiempo.E()];
+		
+		volverTiempoArreglo(tiempos);
+		
+		while(i<grafoTiempo.E() && z<grafoTiempo.E())
 		{
-			int j=0;
-
-			while(j<grafoDistancia.E())
+			int j=i+1;
+			
+			while(j<grafoTiempo.E() && z<grafoTiempo.E())
 			{
-
-				//Costo 1
-				Double haversine=0.0;
-
-				if(grafoDistancia.getInfoArc(i, j)!=null)
-				{
-					haversine=(Double) grafoDistancia.getInfoArc(i, j);
-				}
-
-
-				//Costo 2
-				double totalTiempos=0;
-				int numeroTiempos=0;
-				System.out.println(tiemposDeViaje.size());
-
-				Iterator<TravelTime> iter= tiemposDeViaje.iterator();
-
-				while(iter.hasNext())
-				{
-					TravelTime actual= iter.next();
-
-					int origen=actual.getSourceID();
-					int destino= actual.getDstID();
-
-					if((origen==i && destino==j)||(origen==j&&destino==i))
-					{
-						totalTiempos += actual.getMeanTravelTime();
-						numeroTiempos++;
-					}
-
-				}
-
-				double promedio=0;
-
-				if(numeroTiempos !=0)
-				{
-					promedio=(totalTiempos/numeroTiempos);
-				}
-				else
-				{
-					Coordinate v1=(Coordinate) grafoDistancia.getInfoVertex(i);
-					Coordinate v2=(Coordinate) grafoDistancia.getInfoVertex(j);
-
-					if(v1!=null&&v2!=null&&v1.getMOVEMENT_ID()==v2.getMOVEMENT_ID())
-					{
-						promedio=10;
-					}
-					else
-					{
-						promedio=100;
-					}
-				}
-				System.out.println(promedio);
-
-				//Costo 3
-
-				double velocidad=haversine/promedio;
-
-				//Cambiar costos
-				
-				grafoTiempo.setInfoArc(i, j, promedio);
-				grafoVelocidad.setInfoArc(i, j, velocidad);
-
+				grafoTiempo.setInfoArc(i, j, tiempos[z] );
+				z++;
 				j++;
 			}
 			i++;
 		}
-
-
 	}
-
+	
+	private void volverTiempoArreglo(double[] tiempos)
+	{
+		int i=0;
+		
+		Iterator iter= tiemposDeViaje.iterator();
+		
+		while(iter.hasNext() && i<18558)
+		{
+			TravelTime actual=(TravelTime) iter.next();
+			
+			double t= actual.getMeanTravelTime();
+			
+			tiempos[i]= t;
+			
+			i++;
+		}
+		
+	}
+	
+	
+	
+	
 	private void cargarArchivosViajesZonas() throws Exception
 	{
 		File archivo = new File ("./data/bogota_vertices.txt");
@@ -509,7 +480,7 @@ public class MVCModelo {
 		
 		boolean[] marked = new boolean[grafoDistancia.V()];
 		
-		DFS(id1,id2, marked, q );
+		DFSB1(id1,id2, marked, q );
 		
 		System.out.println("Camino a seguir:");
 		System.out.println("");
@@ -558,9 +529,15 @@ public class MVCModelo {
 		System.out.println("Distancia total: " + distanciaTotal);
 		System.out.println("Tiempo total: "+ tiempoTotal);
 
+		try {
+			generarMapaB1(q);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
-	private void DFS(int v, int f, boolean[] marked, Queue<Vertex> q)
+	private void DFSB1(int v, int f, boolean[] marked, Queue<Vertex> q)
 	{
 		Coordinate actual=(Coordinate) grafoDistancia.getInfoVertex(v);
 		Vertex ver= new Vertex(v, actual);
@@ -580,18 +557,228 @@ public class MVCModelo {
 			int adjId = grafoDistancia.keyToIndex(id);
 			if(!marked[adjId])
 			{
-				DFS(adjId, f, marked, q);
+				DFSB1(adjId, f, marked, q);
 			}
 				
 		}
 	}
-
-
-	public Queue<Vertex> reqB2(long lat1, long lon2, int T )
+	
+	private void generarMapaB1(Queue<Vertex> q) throws Exception
 	{
-		return null;
+		File pre= new File("./data/HTML/pre.html");
+		FileReader frPre= new FileReader(pre);
+		BufferedReader brPre= new BufferedReader(frPre);
+
+		File post= new File("./data/HTML/post.html");
+		FileReader frPost= new FileReader(post);
+		BufferedReader brPost= new BufferedReader(frPost);
+
+
+		File escritura = new File ("./data/HTML/ReqB1.html");
+		PrintWriter pr = new PrintWriter(escritura);
+
+		String lineaPre= brPre.readLine();
+
+		while(lineaPre!=null)
+		{
+			pr.println(lineaPre);
+
+			lineaPre=brPre.readLine();
+		}
+		
+		brPre.close();
+
+		Iterator iter= q.iterator();
+		
+		pr.println("line = [");
+		StringJoiner joiner= new StringJoiner(",");
+
+		while(iter.hasNext())
+		{
+			Vertex v1= (Vertex) iter.next();
+			Coordinate c= (Coordinate) v1.getValue();
+
+			if(c!=null)
+			{
+
+				double lat1= c.latitude;
+				double lon1=c.longitude;
+
+
+				String s1= "{ lat: "+lat1+" , lng: "+lon1+"}";
+
+				joiner.add(s1);
+
+			}
+
+		}
+		pr.println(joiner.toString());
+
+		pr.println("]; path = new google.maps.Polyline({path: line, strokeColor: '#FF0000', strokeWeight: 2 }); path.setMap(map);");
+
+
+		String lineaPost= brPost.readLine();
+
+		while(lineaPost!=null)
+		{
+			pr.println(lineaPost);
+
+			lineaPost=brPost.readLine();
+		}
+		
+		brPost.close();
+		pr.close();
+
+		File htmlFile = escritura;
+		try {
+			Desktop.getDesktop().browse(htmlFile.toURI());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+
 	}
 
+
+
+	public void reqB2(double lat, double lon, int T )
+	{
+		Vertex v= encontrarVerticeMasCercano(lat, lon);
+		int id=(int) v.getId();
+		
+		Queue<Vertex> q= new Queue<Vertex>();
+		
+		boolean[] marked = new boolean[grafoDistancia.V()];
+		
+		DFSB2(id,T, marked, q );
+		
+		System.out.println("Vertices alcanzables en ese tiempo: ");
+		System.out.println("");
+		
+		Iterator iter= q.iterator();
+		
+		
+		while(iter.hasNext())
+		{
+			Vertex actual= (Vertex) iter.next();
+			Coordinate c= (Coordinate) actual.getValue();
+			
+			System.out.println("Id: "+ actual.getId()+ " latitud: " + c.latitude + " longitud: " + c.longitude);
+		}
+		
+		try {
+			generarMapaB2(q);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	private void DFSB2(int v, double tRestante, boolean[] marked, Queue<Vertex> q)
+	{
+
+		Coordinate actual=(Coordinate) grafoDistancia.getInfoVertex(v);
+		Vertex ver= new Vertex(v, actual);
+		q.enqueue(ver);
+
+		marked[v] = true;
+		int actKey =(int) grafoDistancia.indexToKey(v);
+
+		Iterable<Integer> adjs = grafoDistancia.adjacents(actKey);
+		for(Integer id : adjs)
+		{
+			int adjId = grafoDistancia.keyToIndex(id);
+			
+			double tiempoActual= (double) grafoTiempo.getInfoArc(actKey, adjId);
+			
+			if(!marked[adjId] && tiempoActual <= tRestante)
+			{
+				DFSB2(adjId, tRestante-tiempoActual, marked, q);
+			}
+				
+		}
+		
+	}
+
+	private void generarMapaB2(Queue<Vertex> q) throws Exception
+	{
+		File pre= new File("./data/HTML/pre.html");
+		FileReader frPre= new FileReader(pre);
+		BufferedReader brPre= new BufferedReader(frPre);
+
+		File post= new File("./data/HTML/post.html");
+		FileReader frPost= new FileReader(post);
+		BufferedReader brPost= new BufferedReader(frPost);
+
+
+		File escritura = new File ("./data/HTML/ReqB2.html");
+		PrintWriter pr = new PrintWriter(escritura);
+
+		String lineaPre= brPre.readLine();
+
+		while(lineaPre!=null)
+		{
+			pr.println(lineaPre);
+
+			lineaPre=brPre.readLine();
+		}
+		
+		brPre.close();
+
+		Iterator iter= q.iterator();
+		
+		pr.println("line = [");
+		StringJoiner joiner= new StringJoiner(",");
+
+		while(iter.hasNext())
+		{
+			Vertex v1= (Vertex) iter.next();
+			Coordinate c= (Coordinate) v1.getValue();
+
+			if(c!=null)
+			{
+
+				double lat1= c.latitude;
+				double lon1=c.longitude;
+
+
+				String s1= "{ lat: "+lat1+" , lng: "+lon1+"}";
+
+				joiner.add(s1);
+
+			}
+
+		}
+		pr.println(joiner.toString());
+
+		pr.println("]; path = new google.maps.Polyline({path: line, strokeColor: '#FF0000', strokeWeight: 2 }); path.setMap(map);");
+
+
+		String lineaPost= brPost.readLine();
+
+		while(lineaPost!=null)
+		{
+			pr.println(lineaPost);
+
+			lineaPost=brPost.readLine();
+		}
+		
+		brPost.close();
+		pr.close();
+
+		File htmlFile = escritura;
+		try {
+			Desktop.getDesktop().browse(htmlFile.toURI());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+
+	}
+	
 	public Graph reqB3() 
 	{
 		return null; 
@@ -615,6 +802,90 @@ public class MVCModelo {
 	{
 		return null; 
 	}
+
+//	public void cambiarCostos() throws Exception
+//	{	
+//		cargarArchivosViajesZonas();
+//		grafoTiempo=grafoDistancia;
+//		grafoVelocidad=grafoDistancia;
+//
+//		int i=0;
+//
+//		while(i<grafoDistancia.E())
+//		{
+//			int j=0;
+//
+//			while(j<grafoDistancia.E())
+//			{
+//
+//				//Costo 1
+//				Double haversine=0.0;
+//
+//				if(grafoDistancia.getInfoArc(i, j)!=null)
+//				{
+//					haversine=(Double) grafoDistancia.getInfoArc(i, j);
+//					System.out.println(haversine);
+//				}
+//
+//
+//				//Costo 2
+//				double totalTiempos=0;
+//				int numeroTiempos=0;
+//
+//
+//				Iterator<TravelTime> iter= tiemposDeViaje.iterator();
+//
+//				while(iter.hasNext())
+//				{
+//					TravelTime actual= iter.next();
+//
+//					int origen=actual.getSourceID();
+//					int destino= actual.getDstID();
+//
+//					if((origen==i && destino==j)||(origen==j&&destino==i))
+//					{
+//						System.out.println("Encontro uno");
+//						totalTiempos += actual.getMeanTravelTime();
+//						numeroTiempos++;
+//					}
+//
+//				}
+//
+//				double promedio=0;
+//
+//				if(numeroTiempos !=0)
+//				{
+//					promedio=(totalTiempos/numeroTiempos);
+//				}
+//				else
+//				{
+//					Coordinate v1=(Coordinate) grafoDistancia.getInfoVertex(i);
+//					Coordinate v2=(Coordinate) grafoDistancia.getInfoVertex(j);
+//
+//					if(v1!=null&&v2!=null&&v1.getMOVEMENT_ID()==v2.getMOVEMENT_ID())
+//					{
+//						promedio=10;
+//					}
+//					else
+//					{
+//						promedio=100;
+//					}
+//				}
+//				
+//
+//				//Costo 3
+//
+//				double velocidad=haversine/promedio;
+//
+////				//Cambiar costos
+////				
+////				grafoTiempo.setInfoArc(i, j, promedio);
+////				grafoVelocidad.setInfoArc(i, j, velocidad);
+//
+//				j++;
+//			}
+//			i++;
+//		}
 
 
 
