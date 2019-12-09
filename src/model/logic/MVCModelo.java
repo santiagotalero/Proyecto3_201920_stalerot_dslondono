@@ -49,7 +49,9 @@ public class MVCModelo {
 	private Graph grafoDistancia;
 	private Graph grafoTiempo; 
 	private Graph grafoVelocidad; 
+	private Graph grafoZonas;
 	
+	private Queue<Integer> movements;
 	private Queue<TravelTime> tiemposDeViaje;
 	private Queue<Interseccion> zonasUber;
 	private int tamano;
@@ -63,8 +65,10 @@ public class MVCModelo {
 		grafoDistancia= new Graph();
 		grafoTiempo= new Graph();
 		grafoVelocidad= new Graph();
+		grafoZonas= new Graph();
 		tiemposDeViaje= new Queue<TravelTime>();
 		zonasUber= new Queue<Interseccion>();
+		movements= new Queue<Integer>();
 		tamano=0;
 
 		//dijkstra = new Dijkstra(grafo0, 0);
@@ -956,8 +960,9 @@ public class MVCModelo {
 
 	public void reqC1() 
 	{
+	
+		
 		Queue<Vertex> q= new Queue<Vertex>();
-		Queue<Integer> movements= new Queue<Integer>();
 		
 		int i=0;
 		
@@ -968,14 +973,51 @@ public class MVCModelo {
 			i++;
 		}
 		
+		
+		Iterator<Vertex> iter= q.iterator();
+		
+		while(iter.hasNext())
+		{
+			Vertex actual= iter.next();
+			Coordinate c= (Coordinate) actual.getValue();
+			int mov= c.getMOVEMENT_ID();
+			
+			grafoZonas.addVertex(mov, actual.getValue());
+			
+		}
+		iter= q.iterator();
+		
+		while(iter.hasNext())
+		{
+			Vertex actual= iter.next();
+			Coordinate c= (Coordinate) actual.getValue();
+			int mov= c.getMOVEMENT_ID();
+			
+			Iterator<Integer> iterM= movements.iterator();
+			
+			while(iterM.hasNext())
+			{
+				Integer idActual= iterM.next();
+				
+				if(grafoTiempo.existsArc(mov, idActual) && !grafoZonas.existsArc(idActual, mov))
+				{
+					double tiempo= (double) grafoTiempo.getInfoArc(idActual, mov);
+					grafoZonas.addEdge(idActual, mov, tiempo);
+				}
+			}
+			
+		}
+
+
 		try {
-			generarMapaC1(q);
+			generarMapaC1();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		System.out.println(zonasUber.size());
-		System.out.println(q.size());
+		
+		System.out.println("El número de vertices cargado fue:"+ grafoZonas.V()+" , y el número de arcos cargado fue:" + grafoZonas.E());
+
 		
 		
 		
@@ -1017,6 +1059,7 @@ public class MVCModelo {
 		
 		
 	}
+
 	
 	private boolean estaEnQueue(int n, Queue<Integer>q)
 	{
@@ -1034,7 +1077,14 @@ public class MVCModelo {
 		
 		return false;
 	}
-	private void generarMapaC1(Queue<Vertex> q) throws Exception
+	
+	
+	
+	
+	
+	
+	
+	private void generarMapaC1() throws Exception
 	{
 		File pre= new File("./data/HTML/pre.html");
 		FileReader frPre= new FileReader(pre);
@@ -1046,6 +1096,231 @@ public class MVCModelo {
 
 
 		File escritura = new File ("./data/HTML/ReqC1.html");
+		PrintWriter pr = new PrintWriter(escritura);
+
+		String lineaPre= brPre.readLine();
+
+		while(lineaPre!=null)
+		{
+			pr.println(lineaPre);
+
+			lineaPre=brPre.readLine();
+		}
+		
+		brPre.close();
+
+		int i=0;
+		
+		while(i<grafoZonas.E())
+		{
+			Coordinate c= (Coordinate) grafoZonas.getInfoVertex(i);
+
+			if(c!=null)
+			{
+				IteratorArrayList adyacentes=grafoZonas.adj(i);
+
+
+				while(adyacentes.hasNext())
+				{
+					
+					int id= (int) adyacentes.next();
+					
+					pr.println("line = [");
+					
+					StringJoiner joiner= new StringJoiner(",");
+					
+					Coordinate c2= (Coordinate) grafoZonas.getInfoVertex(id);
+					
+					double lat1= c.latitude;
+					double lon1=c.longitude;
+					double lat2=c2.latitude;
+					double lon2=c2.longitude;
+					
+					String s1= "{ lat: "+lat1+" , lng: "+lon1+"}";
+					String s2= "{ lat: "+lat2+" , lng: "+lon2+"}";
+					
+					joiner.add(s1).add(s2);
+					
+					pr.println(joiner.toString());
+					
+					pr.println("]; path = new google.maps.Polyline({path: line, strokeColor: '#FF0000', strokeWeight: 2 }); path.setMap(map);");
+				}
+			}
+			i++;
+		}
+		
+		String lineaPost= brPost.readLine();
+
+		while(lineaPost!=null)
+		{
+			pr.println(lineaPost);
+
+			lineaPost=brPost.readLine();
+		}
+		
+		brPost.close();
+		pr.close();
+
+		File htmlFile = escritura;
+		try {
+			Desktop.getDesktop().browse(htmlFile.toURI());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+
+	}
+	
+	public void reqC2( int IDZonaOrigen, int IDZonaDestino) 
+	{
+		
+		
+		
+		
+	}
+	
+	
+
+	public void reqC3() 
+	{
+		long tiempoInicial= System.currentTimeMillis();
+		
+		
+		int max=0;
+		Queue<Vertex> q= new Queue<Vertex>();
+		
+		
+//		 Iterator<Integer> iter= movements.iterator();
+//		 
+//		 int movAct=-1;
+//		 
+//		 while(iter.hasNext())
+//		 {
+//			 Integer actual= iter.next();
+//			 Queue<Vertex> act= new Queue<Vertex>();
+//			 
+//			 if(movAct!=-1)
+//			 {
+//				 boolean[] marked = new boolean[grafoZonas.V()];
+//				 DFSC3(movAct,actual, marked, act);
+//				 
+//				 if(act.size()>max)
+//				 {
+//					 max=act.size();
+//					 q=act;
+//				 }
+//			 }
+//			 movAct=actual;
+//		 }
+		
+		int i=0;
+
+		while(i<grafoZonas.V())
+		{
+			Coordinate c= (Coordinate) grafoZonas.getInfoVertex(i);
+
+			if(c!=null)
+			{
+				int mov1= c.getMOVEMENT_ID();
+
+				int j=0;
+
+				while(j<grafoZonas.V())
+				{
+					Coordinate c2= (Coordinate) grafoZonas.getInfoVertex(j);
+
+					if(c2!=null)
+					{
+						int mov2= c2.getMOVEMENT_ID();
+
+						Queue<Vertex> act= new Queue<Vertex>();
+
+						boolean[] marked = new boolean[grafoZonas.V()];
+						DFSC3(mov1,mov2, marked, act);
+
+						if(act.size()>max)
+						{
+							max=act.size();
+							q=act;
+						}
+					}
+					j++;
+				}
+
+			}
+			i++;
+		}
+
+
+		 
+		 
+		 long tiempoFinal= System.currentTimeMillis();
+		 
+		 try {
+			generarMapaC3(q);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		 
+		 long tiempoTranscurrido= tiempoFinal-tiempoInicial;
+		 
+		 System.out.println("El tiempo (en milisegundos) que le tomó al algoritmo encontrar la respuesta fue: "+ tiempoTranscurrido);
+		 
+		 Iterator iterQ=q.iterator();
+		 
+		 
+		 while(iterQ.hasNext())
+		 {
+			 Vertex actual= (Vertex) iterQ.next();
+			 
+			 System.out.println("Movement ID: "+ actual.getId());
+		 }
+		 
+		 System.out.println("El total de arcos fue: "+ (max-1));
+		 
+		 
+	}
+	
+	
+	private void DFSC3(int v, int f, boolean[] marked, Queue<Vertex> q)
+	{
+		Coordinate actual=(Coordinate) grafoZonas.getInfoVertex(v);
+		Vertex ver= new Vertex(v, actual);
+		q.enqueue(ver);
+		
+		if(v==f)
+		{
+			return;
+		}
+		
+		marked[v] = true;
+		int actKey =(int) grafoZonas.indexToKey(v);
+
+		Iterable<Integer> adjs = grafoZonas.adjacents(actKey);
+		for(Integer id : adjs)
+		{
+			int adjId = grafoZonas.keyToIndex(id);
+			if(!marked[adjId])
+			{
+				DFSC3(adjId, f, marked, q);
+			}
+				
+		}
+	}
+	private void generarMapaC3(Queue<Vertex> q) throws Exception
+	{
+		File pre= new File("./data/HTML/pre.html");
+		FileReader frPre= new FileReader(pre);
+		BufferedReader brPre= new BufferedReader(frPre);
+
+		File post= new File("./data/HTML/post.html");
+		FileReader frPost= new FileReader(post);
+		BufferedReader brPost= new BufferedReader(frPost);
+
+
+		File escritura = new File ("./data/HTML/ReqC3.html");
 		PrintWriter pr = new PrintWriter(escritura);
 
 		String lineaPre= brPre.readLine();
@@ -1109,16 +1384,6 @@ public class MVCModelo {
 		}
 
 
-	}
-	
-	public Queue<Vertex> reqC2( int IDZonaOrigen, int IDZonaDestino) 
-	{
-		return null;		
-	}
-
-	public Queue<Queue<Vertex>> reqC3() 
-	{
-		return null; 
 	}
 
 //	public void cambiarCostos() throws Exception
@@ -1237,6 +1502,83 @@ public class MVCModelo {
 //		
 //		
 //		
+//	}
+//	
+//	private void generarMapaC1(Queue<Vertex> q) throws Exception
+//	{
+//		File pre= new File("./data/HTML/pre.html");
+//		FileReader frPre= new FileReader(pre);
+//		BufferedReader brPre= new BufferedReader(frPre);
+//
+//		File post= new File("./data/HTML/post.html");
+//		FileReader frPost= new FileReader(post);
+//		BufferedReader brPost= new BufferedReader(frPost);
+//
+//
+//		File escritura = new File ("./data/HTML/ReqC1.html");
+//		PrintWriter pr = new PrintWriter(escritura);
+//
+//		String lineaPre= brPre.readLine();
+//
+//		while(lineaPre!=null)
+//		{
+//			pr.println(lineaPre);
+//
+//			lineaPre=brPre.readLine();
+//		}
+//		
+//		brPre.close();
+//
+//		Iterator iter= q.iterator();
+//		
+//		pr.println("line = [");
+//		StringJoiner joiner= new StringJoiner(",");
+//
+//		while(iter.hasNext())
+//		{
+//			Vertex v1= (Vertex) iter.next();
+//			Coordinate c= (Coordinate) v1.getValue();
+//
+//			if(c!=null)
+//			{
+//
+//				double lat1= c.latitude;
+//				double lon1=c.longitude;
+//
+//
+//				String s1= "{ lat: "+lat1+" , lng: "+lon1+"}";
+//
+//				joiner.add(s1);
+//
+//			}
+//
+//		}
+//		pr.println(joiner.toString());
+//
+//		pr.println("]; path = new google.maps.Polyline({path: line, strokeColor: '#FF0000', strokeWeight: 2 }); path.setMap(map);");
+//
+//
+//		String lineaPost= brPost.readLine();
+//
+//		while(lineaPost!=null)
+//		{
+//			pr.println(lineaPost);
+//
+//			lineaPost=brPost.readLine();
+//		}
+//		
+//		brPost.close();
+//		pr.close();
+//
+//		File htmlFile = escritura;
+//		try {
+//			Desktop.getDesktop().browse(htmlFile.toURI());
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//
+//
 //	}
 
 }

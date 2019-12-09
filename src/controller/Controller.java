@@ -125,7 +125,7 @@ public class Controller {
 
 				break;
 			case 12:
-
+				modelo.reqC3();
 
 				break;
 
