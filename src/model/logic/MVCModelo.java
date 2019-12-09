@@ -27,10 +27,12 @@ import model.data_structures.DirectedEdge;
 import model.data_structures.Edge;
 import model.data_structures.EdgeWeightedDigraph;
 import model.data_structures.Graph;
+import model.data_structures.HashTableLinearProbing;
 import model.data_structures.Queue;
 import model.data_structures.Vertex;
 import model.logic.JSon.ArcoJSon;
 import model.logic.JSon.VerticeJSon;
+
 
 
 
@@ -1180,7 +1182,8 @@ public class MVCModelo {
 		
 	}
 	
-	
+
+
 
 	public void reqC3() 
 	{
