@@ -157,8 +157,6 @@ public class MVCModelo {
 		cargarArchivosViajesZonas();
 		generarGrafoTiempo();
 
-		
-
 	}
 
 	private void generarGrafoTiempo()
@@ -779,20 +777,340 @@ public class MVCModelo {
 
 	}
 	
-	public Graph reqB3() 
+	public void reqB3() 
 	{
-		return null; 
+		long tiempoInicial= System.currentTimeMillis();
+		
+		Queue<Vertex> maxima= new Queue<Vertex>();
+		int max=0;
+		
+		
+		
+		int i=0;
+		
+		while(i<grafoDistancia.V())
+		{
+			Queue<Vertex> q= new Queue<Vertex>();
+			boolean[] marked = new boolean[grafoDistancia.V()];
+			KruskalB3(i, marked, q);
+			
+			if(q.size()>max)
+			{
+				maxima=q;
+				max=q.size();
+			}
+			i++;
+		}
+		
+		try {
+			generarMapaB3(maxima);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		long tiempoFinal= System.currentTimeMillis();
+		
+		long tiempoTranscurrido= tiempoFinal-tiempoInicial;
+		
+		System.out.println("Al algoritmo le tomó: "+ tiempoTranscurrido +" milisegundos en encontrar la solución.");
+		System.out.println("El total de vertices de la componente fue: "+ maxima.size());
+		
+		Iterator iter= maxima.iterator();
+		
+		double distanciaTotal= 0;
+		
+		int idActual=-100;
+		
+		
+		while(iter.hasNext())
+		{
+			Vertex actual= (Vertex) iter.next();
+			
+			int id= (int) actual.getId();
+			
+			System.out.println("Identificador vértice: "+ id);
+			
+			if(idActual !=-100)
+			{
+				double d=0;
+				
+				if(grafoDistancia.existsArc(idActual, id))
+				{
+					d= (double) grafoDistancia.getInfoArc(idActual, id);
+				}
+
+				distanciaTotal+= d;
+				
+				
+			}
+			idActual=id;
+		}
+		
+		System.out.println("El costo total del arbol (en km) es: "+ distanciaTotal);
+		
 	}  
+	
+	private void KruskalB3(int v, boolean[] marked, Queue<Vertex> q)
+	{
+		Coordinate actual=(Coordinate) grafoDistancia.getInfoVertex(v);
+		Vertex ver= new Vertex(v, actual);
+		q.enqueue(ver);
+		
+		marked[v] = true;
+		int actKey =(int) grafoDistancia.indexToKey(v);
+
+		Iterable<Integer> adjs = grafoDistancia.adjacents(actKey);
+		for(Integer id : adjs)
+		{
+			int adjId = grafoDistancia.keyToIndex(id);
+			if(!marked[adjId])
+			{
+			KruskalB3(adjId, marked, q);
+			}
+				
+		}
+	}
+	private void generarMapaB3(Queue<Vertex> q) throws Exception
+	{
+		File pre= new File("./data/HTML/pre.html");
+		FileReader frPre= new FileReader(pre);
+		BufferedReader brPre= new BufferedReader(frPre);
+
+		File post= new File("./data/HTML/post.html");
+		FileReader frPost= new FileReader(post);
+		BufferedReader brPost= new BufferedReader(frPost);
+
+
+		File escritura = new File ("./data/HTML/ReqB3.html");
+		PrintWriter pr = new PrintWriter(escritura);
+
+		String lineaPre= brPre.readLine();
+
+		while(lineaPre!=null)
+		{
+			pr.println(lineaPre);
+
+			lineaPre=brPre.readLine();
+		}
+		
+		brPre.close();
+
+		Iterator iter= q.iterator();
+		
+		pr.println("line = [");
+		StringJoiner joiner= new StringJoiner(",");
+
+		while(iter.hasNext())
+		{
+			Vertex v1= (Vertex) iter.next();
+			Coordinate c= (Coordinate) v1.getValue();
+
+			if(c!=null)
+			{
+
+				double lat1= c.latitude;
+				double lon1=c.longitude;
+
+
+				String s1= "{ lat: "+lat1+" , lng: "+lon1+"}";
+
+				joiner.add(s1);
+
+			}
+
+		}
+		pr.println(joiner.toString());
+
+		pr.println("]; path = new google.maps.Polyline({path: line, strokeColor: '#FF0000', strokeWeight: 2 }); path.setMap(map);");
+
+
+		String lineaPost= brPost.readLine();
+
+		while(lineaPost!=null)
+		{
+			pr.println(lineaPost);
+
+			lineaPost=brPost.readLine();
+		}
+		
+		brPost.close();
+		pr.close();
+
+		File htmlFile = escritura;
+		try {
+			Desktop.getDesktop().browse(htmlFile.toURI());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+
+	}
+	
 
 	////////////////////////////////////////////////////////////////////////////
 	///// PARTE C //////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////
 
-	public Graph reqC1() 
+	public void reqC1() 
 	{
-		return null; 
+		Queue<Vertex> q= new Queue<Vertex>();
+		Queue<Integer> movements= new Queue<Integer>();
+		
+		int i=0;
+		
+		while(i<grafoDistancia.V())
+		{
+			boolean[] marked = new boolean[grafoDistancia.V()];
+			DFSC1(i, marked, q, movements );
+			i++;
+		}
+		
+		try {
+			generarMapaC1(q);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.println(zonasUber.size());
+		System.out.println(q.size());
+		
+		
+		
 	}
+	private void DFSC1(int v, boolean[] marked, Queue<Vertex> q, Queue<Integer> movs)
+	{
 
+		Coordinate actual=(Coordinate) grafoDistancia.getInfoVertex(v);
+		
+		if(actual!=null)
+		{
+			int mov= actual.getMOVEMENT_ID();
+			
+			if(!estaEnQueue(mov, movs))
+			{
+				movs.enqueue(mov);
+				Vertex ver= new Vertex(v, actual);
+				q.enqueue(ver);
+
+				marked[v] = true;
+				int actKey =(int) grafoDistancia.indexToKey(v);
+
+				Iterable<Integer> adjs = grafoDistancia.adjacents(actKey);
+				for(Integer id : adjs)
+				{
+					int adjId = grafoDistancia.keyToIndex(id);
+					
+					
+					if(!marked[adjId])
+					{
+						DFSC1(adjId, marked, q,movs);
+					}
+						
+				}
+			}
+		}
+		
+		
+		
+		
+	}
+	
+	private boolean estaEnQueue(int n, Queue<Integer>q)
+	{
+		Iterator<Integer> iter= q.iterator();
+		
+		while(iter.hasNext())
+		{
+			Integer actual= iter.next();
+			
+			if(actual==n)
+			{
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	private void generarMapaC1(Queue<Vertex> q) throws Exception
+	{
+		File pre= new File("./data/HTML/pre.html");
+		FileReader frPre= new FileReader(pre);
+		BufferedReader brPre= new BufferedReader(frPre);
+
+		File post= new File("./data/HTML/post.html");
+		FileReader frPost= new FileReader(post);
+		BufferedReader brPost= new BufferedReader(frPost);
+
+
+		File escritura = new File ("./data/HTML/ReqC1.html");
+		PrintWriter pr = new PrintWriter(escritura);
+
+		String lineaPre= brPre.readLine();
+
+		while(lineaPre!=null)
+		{
+			pr.println(lineaPre);
+
+			lineaPre=brPre.readLine();
+		}
+		
+		brPre.close();
+
+		Iterator iter= q.iterator();
+		
+		pr.println("line = [");
+		StringJoiner joiner= new StringJoiner(",");
+
+		while(iter.hasNext())
+		{
+			Vertex v1= (Vertex) iter.next();
+			Coordinate c= (Coordinate) v1.getValue();
+
+			if(c!=null)
+			{
+
+				double lat1= c.latitude;
+				double lon1=c.longitude;
+
+
+				String s1= "{ lat: "+lat1+" , lng: "+lon1+"}";
+
+				joiner.add(s1);
+
+			}
+
+		}
+		pr.println(joiner.toString());
+
+		pr.println("]; path = new google.maps.Polyline({path: line, strokeColor: '#FF0000', strokeWeight: 2 }); path.setMap(map);");
+
+
+		String lineaPost= brPost.readLine();
+
+		while(lineaPost!=null)
+		{
+			pr.println(lineaPost);
+
+			lineaPost=brPost.readLine();
+		}
+		
+		brPost.close();
+		pr.close();
+
+		File htmlFile = escritura;
+		try {
+			Desktop.getDesktop().browse(htmlFile.toURI());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+
+	}
+	
 	public Queue<Vertex> reqC2( int IDZonaOrigen, int IDZonaDestino) 
 	{
 		return null;		
@@ -887,7 +1205,39 @@ public class MVCModelo {
 //			i++;
 //		}
 
-
+//	public void reqC1() 
+//	{
+//		Queue<Vertex> q= new Queue<Vertex>();
+//		Queue<Integer> movements= new Queue<Integer>();
+//		
+//		Iterator<Interseccion> iterZonas= zonasUber.iterator();
+//		
+//		while(iterZonas.hasNext())
+//		{
+//			Interseccion actual= iterZonas.next();
+//			
+//			int zona=actual.getMOVEMENT_ID();
+//			
+//			if(!estaEnQueue(zona, movements))
+//			{
+//				movements.enqueue(zona);
+//				Coordinate c= new Coordinate(actual.getLatitud(), actual.getLongitud(), actual.getMOVEMENT_ID());
+//				Vertex v= new Vertex(actual.getId(), c);
+//				q.enqueue(v);
+//			}
+//		}
+//		try {
+//			generarMapaC1(q);
+//		} catch (Exception e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		System.out.println(zonasUber.size());
+//		System.out.println(q.size());
+//		
+//		
+//		
+//	}
 
 }
 

@@ -113,11 +113,11 @@ public class Controller {
 				modelo.reqB2(lat8, lon8, T8);
 				break;
 			case 9:
-
+				modelo.reqB3();
 
 				break;
 			case 10:
-
+				modelo.reqC1();
 
 				break;
 			case 11:

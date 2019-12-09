@@ -189,6 +189,19 @@ public class Graph<K extends Comparable<K>, V, A extends Comparable<A>>
 		Arc<K, V, A> arc = arcs.get(vertexPair);
 		return arc == null ? null : arc.getInfo();
 	}
+	
+	public boolean existsArc(K idVertexIni, K idVertexFin)
+	{
+		VertexPair<K> vertexPair = new VertexPair<K>(idVertexIni, idVertexFin);
+		Arc<K, V, A> arc = arcs.get(vertexPair);
+		
+		if(arc!=null)
+		{
+			return true;
+		}
+		else
+			return false;
+	}
 
 	/**
 	 * Changes the information (weight) of an arc between two vertexes.
